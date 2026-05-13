@@ -3,10 +3,12 @@
 <table width="100%">
     <tr>
         <td align="left">
-            <a href="https://reshapewildfire.org/"><img src="https://reshapewildfire.org/assets/reshape-logo-color.svg" style="background-color: #ffffff; display:block" alt="ReSHAPE" width="200"/></a>
+            <a href="https://reshapewildfire.org/"><img src="https://reshapewildfire.org/assets/reshape-logo-color.svg" alt="ReSHAPE" width="200"/>
+            <rect width="100%" height="100%" fill="#ffffff"/></a>
         </td>
         <td align="right">
-            <a href="https://sweri.org/"><img src="https://reshapewildfire.org/assets/sweri-logo.svg" style="background-color: #ffffff; display:block" alt="SWERI" width="120"/></a>
+            <a href="https://sweri.org/"><img src="https://reshapewildfire.org/assets/sweri-logo.svg" alt="SWERI" width="120"/>
+            <rect width="100%" height="100%" fill="#ffffff"/></a>
         </td>
     </tr>
 </table>
