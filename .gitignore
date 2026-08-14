@@ -5,6 +5,8 @@ Icon?
 ehthumbs.db
 *.swp
 *~ 
+# AI tools
+.claude/
 
 # IDEs / editors
 .vscode/

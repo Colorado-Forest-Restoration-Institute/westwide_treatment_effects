@@ -1,12 +1,4 @@
-systematically
-queries
-online
-data
-sources
-and
-compiles
-raw
-data
+# systematically queries online data sources and compiles raw data
 # load packages ----------------------------------------------------------------
 library(tidyverse)
 library(curl)
