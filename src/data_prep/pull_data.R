@@ -2,6 +2,18 @@
 # load packages ----------------------------------------------------------------
 library(tidyverse)
 library(curl)
+library(rlandfire)
+library(sf)
+library(terra)
+
+# pull Landfire biophysical setting data ---------------------------------------
+region <- c("-124.8", "31.3", "-102.0", "49.0")
+lf_request <- landfireAPIv2(
+  products = "LF2020_BPS",
+  aoi = region,
+  email = "ntomczyk@nmhu.edu",
+  path = "./data/raw/"
+)
 
 # pull TWIG treatment data -----------------------------------------------------
 # download zip file

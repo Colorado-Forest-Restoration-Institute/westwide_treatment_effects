@@ -5,6 +5,8 @@ Icon?
 ehthumbs.db
 *.swp
 *~ 
+# AI tools
+.claude/
 
 # IDEs / editors
 .vscode/
@@ -12,9 +14,6 @@ ehthumbs.db
 .idea/
 *.sublime-workspace
 *.sublime-project
-
-# AI tools 
-.claude/
 
 # Posit / RStudio
 .Rproj.user/
