@@ -74,6 +74,8 @@ build/
 *.bak
 *.cache
 .cache/
+raw_data/
+derived_data/
 
 # Compiled / language artifacts
 *.o
