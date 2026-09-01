@@ -7,8 +7,9 @@
 # attribute value +1d relative to the date of the last (largest) perimeter
 # feature.
 
-from datetime import timedelta
 import os
+from datetime import timedelta
+
 import arcpy
 
 arcpy.env.overwriteOutput = True
@@ -153,8 +154,7 @@ with arcpy.da.UpdateCursor(out, ["OID@", "SHAPE@", "start_date"]) as cur:
         cur.updateRow([oid, new_geom, sdate])
         if old_area > 0:
             growth = (new_geom.area - old_area) / old_area * 100
-            if growth > max_growth:
-                max_growth = growth
+            max_growth = max(max_growth, growth)
 
 print(
     f"Nested {len(rows)} perimeters "
