@@ -9,7 +9,7 @@
 # feature, where each cell takes the "countdown" value of the smallest
 # (earliest) perimeter that contains it, and 0 outside every perimeter (unburned
 # ground within the box, and the box itself). This is the "seconds to
-# extinction" raster consumed by target_selector.py.
+# extinction" raster consumed by interpolateMomentOfBurn.py.
 
 import os
 

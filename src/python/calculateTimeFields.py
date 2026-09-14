@@ -10,7 +10,7 @@
 #                below) countdown  - whole seconds from capture_dt until fire
 #   extinction, where extinction is the bounding box's timestamp (last perimeter
 #                +1d). This is the "time remaining" field consumed by
-#                polygonToRaster.py / target_selector.py.
+#                polygonToRaster.py / interpolateMomentOfBurn.py.
 #
 # Same-day perimeters: start_date has only daily resolution, so a calendar day
 # can hold two or more IR flights. When a day has exactly two perimeters and the

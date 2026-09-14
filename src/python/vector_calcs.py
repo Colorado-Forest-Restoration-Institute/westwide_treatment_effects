@@ -1,8 +1,9 @@
 # === description ====
 # EXPERIMENTAL
-# Takes a "moment of burn" raster (or "DEM", output from target_selector.py) and
-# returns the gradient or "flow direction", representing the probable direction
-# and magnitude (speed) of the firefront. not needed for the analysis. 
+# Takes a "moment of burn" raster (or "DEM", output from
+# interpolateMomentOfBurn.py) and returns the gradient or "flow direction",
+# representing the probable direction and magnitude (speed) of the firefront.
+# not needed for the analysis.
 import arcpy
 import numpy as np
 from arcpy.sa import *

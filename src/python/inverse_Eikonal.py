@@ -1,7 +1,7 @@
 # === description ====
 # EXPERIMENTAL script based on conversations with ChatGPT. May not work. Input:
-# rasterized IR polygons, as used in target_selector.py. The script takes a
-# partially known fire arrival-time raster and fills in missing values by
+# rasterized IR polygons, as used in interpolateMomentOfBurn.py. The script
+# takes a partially known fire arrival-time raster and fills in missing values by
 # solving a smoothed inverse Eikonal problem using PyTorch optimization, then
 # outputs the completed raster to ArcGIS.
 import arcpy
