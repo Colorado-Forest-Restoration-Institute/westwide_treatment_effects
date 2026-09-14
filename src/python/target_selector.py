@@ -5,8 +5,8 @@
 # toward the fire origin. Interpolates values between IR perimeters using a
 # Euclidean distance transform (or, alternately, recursive binary dilation).
 # The innermost perimeter has no earlier perimeter to interpolate its
-# interior from, so a fire-origin point is guessed there (the deepest point
-# inside it) and given a countdown ORIGIN_LEAD_TIME earlier than the
+# interior from, so the fire-origin point is assumed to be the deepest point
+# inside it, and is given a countdown ORIGIN_LEAD_TIME earlier than the
 # perimeter itself.
 #
 # Output: a "moment of burn" raster at the same resolution and extent as the
@@ -119,15 +119,12 @@ print(f"n unique timestamps: {flight_times.shape[0]}")
 print(f"timestamps: {flight_times}")
 
 # === estimate a fire-origin point inside the innermost perimeter ===
-# The innermost perimeter has no earlier perimeter to interpolate its
-# interior from, so its interior would otherwise be left flat. Guess an
-# ignition point instead: the pixel deepest inside the perimeter, i.e. the
-# last one to survive if the perimeter were eroded inward repeatedly.
-# distance_transform_edt gives that directly - a pixel's distance to the
-# nearest False cell equals its erosion depth - so argmax finds it in one
-# exact pass rather than an actual erosion loop. Splicing that point into
-# ir/flight_times as one more ring lets the loop below interpolate the
-# interior exactly like every other ring - no special-casing needed.
+# The innermost perimeter has no earlier perimeter to interpolate its interior
+# from, so its interior would otherwise be left flat. Guess an ignition point
+# instead: the pixel deepest inside the perimeter, i.e. the last one to survive
+# if the perimeter were eroded inward repeatedly. Splicing that point into
+# ir/flight_times as one more ring lets the loop below interpolate the interior
+# exactly like every other ring - no special-casing needed.
 #
 # This is a guess, not a measurement: innermost_mask flags the footprint it
 # applies to, in case it should be excluded from downstream analysis.
