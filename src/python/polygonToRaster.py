@@ -1,24 +1,64 @@
 # === description ====
+#
+# Input: the feature class written by calculateTimeFields.py (nested IR
+# perimeters plus a bounding-box feature, from nestPerimeters.py). Every feature
+# carries a "countdown" field - whole seconds from that feature's capture time
+# until fire extinction, 0 on the bounding box.
+#
+# Output: a single-band raster covering the full extent of the bounding box
+# feature, where each cell takes the "countdown" value of the smallest
+# (earliest) perimeter that contains it, and 0 outside every perimeter (unburned
+# ground within the box, and the box itself). This is the "seconds to
+# extinction" raster consumed by target_selector.py.
 
-# TODO this doesn't seem to work, doing this directly in ArcGIS Pro for now.
-# Inputs: 1) a polygon feature layer for ir perimeters, output from
-# calculateTimeFields.py and 2) a template raster. Rasterizes the input polygon
-# features. Output: rasterized ir perimeter layer suitable for use in
-# target_selector.py.
+import os
+
 import arcpy
 
-# === Set workspace (.gdb) ===
-arcpy.env.workspace = r"C:\Users\anson\Documents\ArcGIS\Projects\FireSpread\FireSpread.gdb"
 arcpy.env.overwriteOutput = True
 
-# === Read existing raster to determine cellsize ====
-raster = arcpy.Raster("doveBaseMapMay2020Clip")
-cell_size = raster.meanCellWidth
+# === workspace (.gdb) ===
+# calculateTimeFields.py writes here
+GDB     = r"C:\Users\anson\Documents\westwide_treatment_effects\derived_data\daily_progression.gdb"
+IN_FC   = "Daily_Progression_timed"       # output of calculateTimeFields.py
+OUT_RAS = "Daily_Progression_countdown"   # this script's output
 
-# === Rasterize timestamped feature class ===
-arcpy.conversion.PolygonToRaster("irPerimsTimed", "countdown", "irCountDownRaster",
-                                 cell_assignment = "CELL_CENTER",
-                                 priority_field = "countdown",
-                                 cellsize = cell_size)
-# weirdly, this only worked with the desktop tool?
-# this script is returning empty raster output with min/max values at long int min/max (-/+2147483647)
+# output cell size, in the input feature class's projected units (meters -
+# nestPerimeters.py projects into a per-fire Transverse Mercator).
+CELL_SIZE = 10.0
+
+src = os.path.join(GDB, IN_FC)
+out = os.path.join(GDB, OUT_RAS)
+
+# === set the processing environment explicitly ===
+# arcpy.env settings persist across scripts/sessions in the current workspace.
+# To avoid issues, set every relevant environment from the input itself instead
+# of inheriting anything.
+desc = arcpy.Describe(src)
+arcpy.env.workspace = GDB
+arcpy.env.extent = desc.extent                     # = bounding box extent
+arcpy.env.outputCoordinateSystem = desc.spatialReference
+arcpy.env.cellSize = CELL_SIZE
+arcpy.env.snapRaster = None
+arcpy.env.mask = None
+
+# === rasterize ===
+arcpy.conversion.PolygonToRaster(
+    src,
+    "countdown",
+    out,
+    cell_assignment="CELL_CENTER",
+    priority_field="countdown",
+    cellsize=CELL_SIZE,
+)
+
+result = arcpy.Raster(out)
+print(
+    f"Wrote {out}: {result.width}x{result.height} cells at {CELL_SIZE}m, "
+    f"values {result.minimum}..{result.maximum}."
+)
+if result.minimum is None or result.maximum is None:
+    raise RuntimeError(
+        f"{out} came out empty (no valid cell values) - check that {IN_FC} "
+        "has non-null 'countdown' values and overlaps the set extent."
+    )
