@@ -1,36 +1,28 @@
-# === description ====
+# === description ==== 
+#
 # Input: the feature class written by nestPerimeters.py (fully nested IR heat
 # perimeters plus a single bounding-box feature dated one day past the last
-# perimeter). Perimeters carry only a daily-resolution start_date; we assume each
-# was captured at 00:00 on that day.
+# perimeter). Perimeters carry only a daily-resolution start_date; we assume
+# each was captured at 00:00 on that day.
 #
-# Output: a copy of that feature class with two added fields:
-#   capture_dt - the assumed capture timestamp (start_date at 00:00, possibly
-#                bumped +1 day, see below)
-#   countdown  - whole seconds from capture_dt until fire extinction, where
-#                extinction is the bounding box's timestamp (last perimeter +1d).
-#                This is the "time remaining" field consumed by polygonToRaster.py
-#                / target_selector.py.
-#
-# Ordering: nestPerimeters.py determines its running-union order by sorting on
-# (start_date, area) - that sort IS the progression order it built the nesting
-# from, so we reuse that exact key here rather than re-deriving order from area
-# alone. (Area alone is a weaker signal: a zero-growth day can tie areas across
-# two different dates, and it throws away the date information we already have.)
-# The bounding box (start_date == last perimeter +1d, per nestPerimeters.py)
-# sorts last unambiguously since its date exceeds every real perimeter's.
+# Output: a copy of that feature class with two added fields: capture_dt - the
+#   assumed capture timestamp (start_date at 00:00, possibly bumped +1 day, see
+#                below) countdown  - whole seconds from capture_dt until fire
+#   extinction, where extinction is the bounding box's timestamp (last perimeter
+#                +1d). This is the "time remaining" field consumed by
+#                polygonToRaster.py / target_selector.py.
 #
 # Same-day perimeters: start_date has only daily resolution, so a calendar day
-# can hold two IR flights. When a day has exactly two perimeters and the
+# can hold two or more IR flights. When a day has exactly two perimeters and the
 # following calendar day has none, we assume the first was flown near 00:00 and
 # the second near 23:59, and bump the second to +1 day so the progression keeps
 # a sane daily cadence.
 #
 # In any case where we can't do that split - the following day is already
 # occupied (including by the bounding box), or three-plus perimeters share one
-# start_date, so the early/late-flight assumption doesn't even apply - we leave
-# the whole group at 00:00 on that date with a shared countdown, and print a
-# warning that includes how much the tied perimeters' areas differ. A same-day
+# start_date, so the early/late-flight assumption doesn't apply - we leave the
+# whole group at 00:00 on that date with a shared countdown, and print a warning
+# that includes how much the tied perimeters' areas differ. A same-day
 # assumption is fine if the areas are close (little fire growth between them);
 # if they differ a lot, treating them as simultaneous is probably wrong and the
 # input needs manual review.
@@ -56,10 +48,9 @@ arcpy.management.CopyFeatures(src, out)
 arcpy.management.AddField(out, "capture_dt", "DATE")
 arcpy.management.AddField(out, "countdown", "LONG")
 
-# === read features in progression order ===
-# collect (capture_datetime, area, oid); skip the junk rows nestPerimeters.py
-# leaves in place (null geometry or null start_date - it cannot position those in
-# the progression, and neither can we).
+# === read features in progression order === 
+# collect (capture_datetime, area, oid); skip rows with null geometry or null
+# start_date 
 rows = []
 null_geom = []
 null_date = []
@@ -95,7 +86,7 @@ rows.sort(key=lambda r: (r[0], r[1], r[2]))
 extinction, _, box_oid = rows[-1]
 perims = rows[:-1]  # everything earlier, already in progression order
 
-# sanity: the box must post-date every perimeter (nestPerimeters guarantees this)
+# sanity: box should post-date every perimeter (nestPerimeters guarantees this)
 if extinction <= perims[-1][0]:
     raise RuntimeError(
         f"Bounding box timestamp {extinction:%Y-%m-%d} does not post-date the "
@@ -126,7 +117,14 @@ while i < len(perims):
     group = perims[i:j + 1]
     day = perims[i][0]
     next_day = day + timedelta(days=1)
-
+    # if group only contains 1 perimeter: good! continue.
+    if len(group) == 1:
+        capture[perims[i][2]] = day
+        i = j + 1
+        continue
+    
+    # if group contains two perimeters and next day is empty, bump perimeter 2
+    # to the next day. 
     if len(group) == 2 and next_day not in occupied:
         # first flight stays at 00:00 of `day`; second flight moves to next day
         occupied.add(next_day)
@@ -137,7 +135,7 @@ while i < len(perims):
         i = j + 1
         continue
 
-    # can't split this group into separate flight times: either 3+ perimeters
+    # If the group isn't resolved by now, we have an issue: either 3+ perimeters
     # share `day` (the early/late-flight assumption doesn't extend that far),
     # or exactly 2 do but `next_day` is already taken. Leave them all at 00:00
     # on `day` and warn, since a same-day assumption is only safe if they're

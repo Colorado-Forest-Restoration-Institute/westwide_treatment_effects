@@ -1,9 +1,10 @@
 # === description ====
+#
 # Input: raw file geodatabase including ir heat perimeter polygon feature layer.
-# Should be for a single fire.
-# Output: a new feature layer, reprojected into a Transverse Mercator centered on
-# the fire, with fully nested perimeters (every perimeter completely encloses all
-# earlier-dated perimeters), plus a bounding box feature with a start_date
+# Should be for a single fire. 
+# Output: a new feature layer, reprojected into a Transverse Mercator centered
+# on the fire, with fully nested perimeters (every perimeter completely encloses
+# all earlier-dated perimeters), plus a bounding box feature with a start_date
 # attribute value +1d relative to the date of the last (largest) perimeter
 # feature.
 
@@ -33,13 +34,14 @@ if not arcpy.Exists(OUT_GDB):
     arcpy.management.CreateFileGDB(os.path.dirname(OUT_GDB), os.path.basename(OUT_GDB))
 
 # === pick a local projection for this fire ===
-# Downstream we need true distances/areas (fireline speed) and preserved bearings
-# (fireline direction). No single western-US CRS gives both, so each fire gets
-# its own Transverse Mercator with the central meridian and latitude of origin
-# set to the centroid of its perimeters. TM is conformal (bearings hold), and
-# with scale factor 1 at the fire center the scale error across a single fire
-# (tens of km) stays under ~1e-5, so area error is well under 0.01%. The datum
-# matches the source (WGS84), so the reprojection needs no datum shift.
+# Downstream we need true distances/areas (fireline speed) and preserved
+# bearings (fireline direction). No single western-US CRS gives both, so each
+# fire gets its own Transverse Mercator with the central meridian and latitude
+# of origin set to the centroid of its perimeters. TM is conformal (bearings
+# hold), and with scale factor 1 at the fire center the scale error across a
+# single fire (tens of km) stays under ~1e-5, so area error is well under 0.01%.
+# The datum matches the source (WGS84), so the reprojection needs no datum
+# shift.
 
 # get the centroid of the source feature class in WGS84
 src_desc = arcpy.Describe(src)
@@ -81,15 +83,16 @@ pad = PAD_M / sr.metersPerUnit
 
 
 # === force perimeters to nest ===
-# Physical burned area only grows, so the correct fix is to grow later perimeters
-# to swallow every earlier one, never to shrink an earlier one. Replace each
-# perimeter with the running union of it and all perimeters before it.
-#
-# This needs a total order over features, not one feature per day. start_date has
-# only daily resolution, so ties are possible (two IR flights on one calendar
-# day); we break ties by area ascending, since the smaller perimeter is almost
-# certainly the earlier observation. union() is commutative, so within a tied
-# group only the frame assigned to the first member depends on that choice.
+
+# Physical burned area only grows, so the correct fix is to grow later
+# perimeters to swallow every earlier one, never to shrink an earlier one.
+# Replace each perimeter with the running union of it and all perimeters before
+# it. This needs a total order over features, not one feature per day.
+# start_date has only daily resolution, so ties are possible (two IR flights on
+# one calendar day); we break ties by area ascending, since the smaller
+# perimeter is almost certainly the earlier observation. union() is commutative,
+# so within a tied group only the frame assigned to the first member depends on
+# that choice.
 rows = []          # the usable perimeters: (start_date, area, oid, shape)
 attrs = {}         # oid -> (poly_incid, poly_irwin)
 null_geom = []     # OIDs skipped for having no geometry
@@ -162,10 +165,11 @@ print(
     f"largest single correction added {max_growth:.2f}% area."
 )
 
-# the last row in sorted order is now, by construction, the largest perimeter and
-# contains every other; its extent is the extent of the whole progression. use
-# this to define a bounding box feature with start_date == last perimeter + 1 day, and
-# with the same poly_incid and poly_irwin attributes as the last perimeter.
+# the last row in sorted order is now, by construction, the largest perimeter
+# and contains every other; its extent is the extent of the whole progression.
+# use this to define a bounding box feature with start_date == last perimeter +
+# 1 day, and with the same poly_incid and poly_irwin attributes as the last
+# perimeter.
 last_date, _, last_oid, _ = rows[-1]
 full_extent = corrected[last_oid].extent
 anchor_date = last_date
